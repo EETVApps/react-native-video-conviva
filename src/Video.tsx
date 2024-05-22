@@ -247,11 +247,10 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         VideoManager.convivaInit(customerKey, gatewayUrl, playerName, tags, enableDebug, getReactTag(nativeRef));
       };
       Platform.select({
-        ios: convivaInitFunction,
+        //ios: convivaInitFunction,
         android: convivaInitFunction,
         default: () => {
-          // TODO: Implement VideoManager.convivaInitFunction for windows
-          // nativeRef.current?.setNativeProps({seek: time});
+          // TODO: Implement VideoManager.convivaInitFunction for windows and iOS
         },
       })();
     }, []);
@@ -265,11 +264,10 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         VideoManager.reportPlaybackRequested(assetName, isLive, tags, getReactTag(nativeRef));
       };
       Platform.select({
-        ios: reportPlaybackRequestedFunction,
+        //ios: reportPlaybackRequestedFunction,
         android: reportPlaybackRequestedFunction,
         default: () => {
-          // TODO: Implement VideoManager.reportPlaybackRequested for windows
-          // nativeRef.current?.setNativeProps({seek: time});
+          // TODO: Implement VideoManager.reportPlaybackRequested for windows and iOS
         },
       })();
     }, []);
@@ -283,11 +281,10 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         VideoManager.setPlaybackData(streamUrl, viewerId, tags, getReactTag(nativeRef));
       };
       Platform.select({
-        ios: setPlaybackDataFunction,
+        //ios: setPlaybackDataFunction,
         android: setPlaybackDataFunction,
         default: () => {
-          // TODO: Implement VideoManager.setPlaybackData for windows
-          // nativeRef.current?.setNativeProps({seek: time});
+          // TODO: Implement VideoManager.setPlaybackData for windows and iOS
         },
       })();
     }, []);
@@ -301,11 +298,10 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         VideoManager.reportWarning(message, getReactTag(nativeRef));
       };
       Platform.select({
-        ios: reportWarningFunction,
+        //ios: reportWarningFunction,
         android: reportWarningFunction,
         default: () => {
-          // TODO: Implement VideoManager.reportWarning for windows
-          // nativeRef.current?.setNativeProps({seek: time});
+          // TODO: Implement VideoManager.reportWarning for windows and iOS
         },
       })();
     }, []);
@@ -319,11 +315,10 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         VideoManager.reportError(message, tags, getReactTag(nativeRef));
       };
       Platform.select({
-        ios: reportErrorFunction,
+        //ios: reportErrorFunction,
         android: reportErrorFunction,
         default: () => {
-          // TODO: Implement VideoManager.reportError for windows
-          // nativeRef.current?.setNativeProps({seek: time});
+          // TODO: Implement VideoManager.reportError for windows and iOS
         },
       })();
     }, []);
@@ -337,11 +332,10 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         VideoManager.reportPlaybackEnded(getReactTag(nativeRef));
       };
       Platform.select({
-        ios: reportPlaybackEndedFunction,
+        //ios: reportPlaybackEndedFunction,
         android: reportPlaybackEndedFunction,
         default: () => {
-          // TODO: Implement VideoManager.reportPlaybackEnded for windows
-          // nativeRef.current?.setNativeProps({seek: time});
+          // TODO: Implement VideoManager.reportPlaybackEnded for windows and iOS
         },
       })();
     }, []);
