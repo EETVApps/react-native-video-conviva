@@ -70,6 +70,7 @@ export interface VideoRef {
     restore: boolean,
   ) => void;
   save: (options: object) => Promise<VideoSaveData>;
+  setVolume: (volume: number) => void;
 }
 
 const Video = forwardRef<VideoRef, ReactVideoProps>(
@@ -341,8 +342,8 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
     }, []);
   
     const seek = useCallback(async (time: number, tolerance?: number) => {
-      if (isNaN(time)) {
-        throw new Error('Specified time is not a number');
+      if (isNaN(time) || time === null) {
+        throw new Error("Specified time is not a number: '" + time + "'");
       }
 
       if (!nativeRef.current) {
@@ -397,6 +398,10 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
       },
       [setRestoreUserInterfaceForPIPStopCompletionHandler],
     );
+
+    const setVolume = useCallback((volume: number) => {
+      return VideoManager.setVolume(volume, getReactTag(nativeRef));
+    }, []);
 
     const onVideoLoadStart = useCallback(
       (e: NativeSyntheticEvent<OnLoadStartData>) => {
@@ -620,6 +625,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         pause,
         resume,
         restoreUserInterfaceForPictureInPictureStopCompleted,
+        setVolume,
       }),
       [
         convivaInit,
@@ -635,6 +641,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         pause,
         resume,
         restoreUserInterfaceForPictureInPictureStopCompleted,
+        setVolume,
       ],
     );
 

@@ -127,6 +127,13 @@ class VideoManagerModule(reactContext: ReactApplicationContext?) : ReactContextB
         }
     }
 
+    @ReactMethod
+    fun setVolume(volume: Float, reactTag: Int) {
+        performOnPlayerView(reactTag) {
+            it?.setVolumeModifier(volume)
+        }
+    }
+
     companion object {
         private const val REACT_CLASS = "VideoManager"
     }
