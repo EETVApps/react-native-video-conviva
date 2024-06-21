@@ -88,4 +88,21 @@ RCT_EXTERN_METHOD(dismissFullscreenPlayer : (nonnull NSNumber*)reactTag)
 
 RCT_EXTERN_METHOD(setVolume : (nonnull float*)volume reactTag : (nonnull NSNumber*)reactTag)
 
+//MARK: - Conviva bridging methods
+RCT_EXTERN_METHOD(convivaInit:(nonnull NSString*)customerKey gatewayUrl:(nonnull NSString*)gatewayUrl playerName:(nonnull NSString*)playerName tags:(nonnull NSDictionary*)tags enableDebug:(BOOL)enableDebug reactTag:(NSInteger)reacTag)
+
+RCT_EXTERN_METHOD(reportPlaybackRequested:(nonnull NSString*)assetName isLive:(BOOL)isLive tags:(nonnull NSDictionary*)tags reactTag:(NSInteger)reacTag)
+
+RCT_EXTERN_METHOD(setPlaybackData:(nonnull NSString*)streamUrl viewerId:(nonnull NSString*)viewerId tags:(nonnull NSDictionary*)tags reactTag:(NSInteger)reacTag)
+
+RCT_EXTERN_METHOD(reportWarning:(nonnull NSString*)message reactTag:(NSInteger)reacTag)
+
+RCT_EXTERN_METHOD(reportError:(nonnull NSString*)message tags:(nonnull NSDictionary*)tags  reactTag:(NSInteger)reacTag)
+
+RCT_EXTERN_METHOD(setSeekStart:(NSInteger)startPosition reactTag:(NSInteger)reacTag)
+
+RCT_EXTERN_METHOD(setSeekEnd:(NSInteger)endPosition reactTag:(NSInteger)reacTag)
+
+RCT_EXTERN_METHOD(reportPlaybackEnded:(NSInteger)reacTag)
+
 @end

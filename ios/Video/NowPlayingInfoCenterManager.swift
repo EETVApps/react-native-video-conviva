@@ -278,4 +278,10 @@ class NowPlayingInfoCenterManager {
             }
         }
     }
+    
+    // MARK: Conviva integration
+    /// Returns the current AVPlayer object
+    @objc public func getStreamingPlayer() -> AVPlayer? {
+        return currentPlayer
+    }
 }

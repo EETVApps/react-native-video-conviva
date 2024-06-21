@@ -19,6 +19,8 @@ Pod::Spec.new do |s|
   s.subspec "Video" do |ss|
     ss.source_files = "ios/Video/**/*.{h,m,swift}"
 
+	s.dependency "ConvivaAVFoundation", "4.0.51"
+	
     if defined?($RNVideoUseGoogleIMA)
       Pod::UI.puts "RNVideo: enable IMA SDK"
 

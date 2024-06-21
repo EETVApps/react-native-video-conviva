@@ -87,4 +87,45 @@ class RCTVideoManager: RCTViewManager {
     override class func requiresMainQueueSetup() -> Bool {
         return true
     }
+    
+    //MARK: - Conviva bridging methods
+    @objc(convivaInit:gatewayUrl:playerName:tags:enableDebug:reactTag:)
+    func convivaInit(customerKey: String, gatewayUrl: String, playerName: String, tags : [String:Any], enableDebug : Bool, reactTag : Int)  {
+        ConvivaSessionsManager.sharedManager.initialiseConviva(customerKey: customerKey, gatewayUrl: gatewayUrl, playerName: playerName, tags: tags, enableDebug: enableDebug)
+    }
+    
+    @objc(reportPlaybackRequested:isLive:tags:reactTag:)
+    func reportPlaybackRequested(assetName: String, isLive: Bool, tags : [String:Any], reactTag : Int) {
+        ConvivaSessionsManager.sharedManager.reportPlaybackRequested(assetName: assetName, isLive: isLive, tags: tags)
+    }
+    
+    @objc(setPlaybackData:viewerId:tags:reactTag:)
+    func setPlaybackData(streamUrl: String, viewerId: String, tags : [String:Any], reactTag : Int) {
+        ConvivaSessionsManager.sharedManager.setPlaybackData(streamUrl: streamUrl, viewerId: viewerId, tags: tags)
+    }
+    
+    @objc(reportWarning:reactTag:)
+    func reportWarning(message: String, reactTag : Int) {
+        ConvivaSessionsManager.sharedManager.reportWarning(message: message)
+    }
+
+    @objc(reportError:tags:reactTag:)
+    func reportError(message: String, tags : [String:Any], reactTag : Int) {
+        ConvivaSessionsManager.sharedManager.reportError(message: message, tags: tags)
+    }
+    
+    @objc(setSeekStart:reactTag:)
+    func setSeekStart(startPosition: Int, reactTag : Int) {
+        ConvivaSessionsManager.sharedManager.setSeekStart(startPosition: startPosition)
+    }
+    
+    @objc(setSeekEnd:reactTag:)
+    func setSeekEnd(endPosition: Int, reactTag : Int) {
+        ConvivaSessionsManager.sharedManager.setSeekEnd(endPosition: endPosition)
+    }
+    
+    @objc(reportPlaybackEnded:)
+    func reportPlaybackEnded(reactTag : Int) {
+        ConvivaSessionsManager.sharedManager.reportPlaybackEnded()
+    }
 }
