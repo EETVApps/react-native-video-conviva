@@ -3,19 +3,14 @@
 import React, {Component} from 'react';
 
 import {
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
   ActivityIndicator,
-  PanResponder,
   ToastAndroid,
   Platform,
-  PanResponderInstance,
   Alert,
 } from 'react-native';
-
-import {Picker} from '@react-native-picker/picker';
 
 import Video, {
   AudioTrack,
@@ -39,12 +34,34 @@ import Video, {
   OnSeekData,
   OnPlaybackStateChangedData,
   OnPlaybackRateChangeData,
+  OnVideoTracksData,
+  VideoTrack,
+  SelectedVideoTrackType,
+  SelectedVideoTrack,
   BufferingStrategyType,
+  ReactVideoSource,
+  Drm,
+  TextTracks,
 } from 'react-native-video';
 import ToggleControl from './ToggleControl';
 import MultiValueControl, {
   MultiValueControlPropType,
 } from './MultiValueControl';
+import styles from './styles';
+import AudioTrackSelector from './components/AudioTracksSelector';
+import TextTrackSelector from './components/TextTracksSelector';
+import VideoTrackSelector from './components/VideoTracksSelector';
+import Seeker from './components/Seeker';
+
+type AdditionnalSourceInfo = {
+  textTracks: TextTracks;
+  adTagUrl: string;
+  description: string;
+  drm: Drm;
+  noView: boolean;
+};
+
+type SampleVideoSource = ReactVideoSource | AdditionnalSourceInfo;
 
 interface StateType {
   rate: number;
@@ -59,20 +76,19 @@ interface StateType {
   fullscreen: true;
   decoration: true;
   isLoading: boolean;
-  seekerFillWidth: number;
-  seekerPosition: number;
-  seekerOffset: number;
-  seeking: boolean;
   audioTracks: Array<AudioTrack>;
   textTracks: Array<TextTrack>;
+  videoTracks: Array<VideoTrack>;
   selectedAudioTrack: SelectedTrack | undefined;
   selectedTextTrack: SelectedTrack | undefined;
+  selectedVideoTrack: SelectedVideoTrack;
   srcListId: number;
   loop: boolean;
   showRNVControls: boolean;
   useCache: boolean;
   poster?: string;
   showNotificationControls: boolean;
+  isSeeking: boolean;
 }
 
 class VideoPlayer extends Component {
@@ -89,31 +105,36 @@ class VideoPlayer extends Component {
     fullscreen: true,
     decoration: true,
     isLoading: false,
-    seekerFillWidth: 0,
-    seekerPosition: 0,
-    seekerOffset: 0,
-    seeking: false,
     audioTracks: [],
     textTracks: [],
+    videoTracks: [],
     selectedAudioTrack: undefined,
     selectedTextTrack: undefined,
+    selectedVideoTrack: {
+      type: SelectedVideoTrackType.AUTO,
+    },
     srcListId: 0,
     loop: false,
     showRNVControls: false,
     useCache: false,
     poster: undefined,
     showNotificationControls: false,
+    isSeeking: false,
   };
 
-  seekerWidth = 0;
-
   // internal usage change to index if you want to select tracks by index instead of lang
-  textTracksSelectionBy = 'lang';
+  textTracksSelectionBy = 'index';
 
   srcAllPlatformList = [
     {
       description: 'local file landscape',
       uri: require('./broadchurch.mp4'),
+    },
+    {
+      description: 'local file landscape cropped',
+      uri: require('./broadchurch.mp4'),
+      cropStart: 3000,
+      cropEnd: 10000,
     },
     {
       description: 'local file portrait',
@@ -123,19 +144,22 @@ class VideoPlayer extends Component {
         subtitle: 'Test Subtitle',
         artist: 'Test Artist',
         description: 'Test Description',
-        imageUri: 'https://pbs.twimg.com/profile_images/1498641868397191170/6qW2XkuI_400x400.png'
-      }
+        imageUri:
+          'https://pbs.twimg.com/profile_images/1498641868397191170/6qW2XkuI_400x400.png',
+      },
     },
     {
       description: '(hls|live) red bull tv',
+      textTracksAllowChunklessPreparation: false,
       uri: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master_928.m3u8',
       metadata: {
         title: 'Custom Title',
         subtitle: 'Custom Subtitle',
         artist: 'Custom Artist',
         description: 'Custom Description',
-        imageUri: 'https://pbs.twimg.com/profile_images/1498641868397191170/6qW2XkuI_400x400.png'
-      }
+        imageUri:
+          'https://pbs.twimg.com/profile_images/1498641868397191170/6qW2XkuI_400x400.png',
+      },
     },
     {
       description: 'invalid URL',
@@ -154,6 +178,7 @@ class VideoPlayer extends Component {
     {
       description: 'another bunny (can be saved)',
       uri: 'https://rawgit.com/mediaelement/mediaelement-files/master/big_buck_bunny.mp4',
+      headers: {referer: 'www.github.com', 'User-Agent': 'react.native.video'},
     },
     {
       description: 'sintel with subtitles',
@@ -239,12 +264,11 @@ class VideoPlayer extends Component {
   samplePoster =
     'https://upload.wikimedia.org/wikipedia/commons/1/18/React_Native_Logo.png';
 
-  srcList = this.srcAllPlatformList.concat(
+  srcList: SampleVideoSource[] = this.srcAllPlatformList.concat(
     Platform.OS === 'android' ? this.srcAndroidList : this.srcIosList,
   );
 
   video?: VideoRef;
-  seekPanResponder?: PanResponderInstance;
 
   popupInfo = () => {
     VideoDecoderProperties.getWidevineLevel().then((widevineLevel: number) => {
@@ -270,26 +294,16 @@ class VideoPlayer extends Component {
     this.setState({duration: data.duration, loading: false});
     this.onAudioTracks(data);
     this.onTextTracks(data);
-  };
-
-  updateSeeker = () => {
-    // put this code in timeout as because it may be put just after a setState
-    setTimeout(() => {
-      const position = this.calculateSeekerPosition();
-      this.setSeekerPosition(position);
-    }, 1);
+    this.onVideoTracks(data);
   };
 
   onProgress = (data: OnProgressData) => {
     this.setState({currentTime: data.currentTime});
-    if (!this.state.seeking) {
-      this.updateSeeker();
-    }
   };
 
   onSeek = (data: OnSeekData) => {
+    this.setState({isSeeking: false});
     this.setState({currentTime: data.currentTime});
-    this.updateSeeker();
   };
 
   onVideoLoadStart = () => {
@@ -301,12 +315,12 @@ class VideoPlayer extends Component {
     const selectedTrack = data.audioTracks?.find((x: AudioTrack) => {
       return x.selected;
     });
-    if (selectedTrack?.language) {
+    if (selectedTrack?.index) {
       this.setState({
         audioTracks: data.audioTracks,
         selectedAudioTrack: {
-          type: 'language',
-          value: selectedTrack?.language,
+          type: SelectedVideoTrackType.INDEX,
+          value: selectedTrack?.index,
         },
       });
     } else {
@@ -314,6 +328,13 @@ class VideoPlayer extends Component {
         audioTracks: data.audioTracks,
       });
     }
+  };
+
+  onVideoTracks = (data: OnVideoTracksData) => {
+    console.log('onVideoTracks', data.videoTracks);
+    this.setState({
+      videoTracks: data.videoTracks,
+    });
   };
 
   onTextTracks = (data: OnTextTracksData) => {
@@ -324,13 +345,16 @@ class VideoPlayer extends Component {
     if (selectedTrack?.language) {
       this.setState({
         textTracks: data.textTracks,
-        selectedTextTrack: this.textTracksSelectionBy === 'index' ? {
-          type: 'index',
-          value: selectedTrack?.index,
-        }: {
-          type: 'language',
-          value: selectedTrack?.language,
-        },
+        selectedTextTrack:
+          this.textTracksSelectionBy === 'index'
+            ? {
+                type: 'index',
+                value: selectedTrack?.index,
+              }
+            : {
+                type: 'language',
+                value: selectedTrack?.language,
+              },
       });
     } else {
       this.setState({
@@ -367,13 +391,6 @@ class VideoPlayer extends Component {
 
   onAudioFocusChanged = (event: OnAudioFocusChangedData) => {
     this.setState({paused: !event.hasAudioFocus});
-  };
-
-  getCurrentTimePercentage = () => {
-    if (this.state.currentTime > 0 && this.state.duration !== 0) {
-      return this.state.currentTime / this.state.duration;
-    }
-    return 0;
   };
 
   toast = (visible: boolean, message: string) => {
@@ -420,11 +437,7 @@ class VideoPlayer extends Component {
 
   toggleDecoration() {
     this.setState({decoration: !this.state.decoration});
-    if (this.state.decoration) {
-      this.video?.dismissFullscreenPlayer();
-    } else {
-      this.video?.presentFullscreenPlayer();
-    }
+    this.video?.setFullScreen(!this.state.decoration);
   }
 
   toggleShowNotificationControls() {
@@ -445,6 +458,9 @@ class VideoPlayer extends Component {
       textTracks: [],
       selectedAudioTrack: undefined,
       selectedTextTrack: undefined,
+      selectedVideoTrack: {
+        type: SelectedVideoTrackType.AUTO,
+      },
     });
   }
 
@@ -460,166 +476,20 @@ class VideoPlayer extends Component {
     );
   }
 
-  componentDidMount() {
-    this.initSeekPanResponder();
-  }
-
-  /**
-   * Render the seekbar and attach its handlers
-   */
-
-  /**
-   * Constrain the location of the seeker to the
-   * min/max value based on how big the
-   * seeker is.
-   *
-   * @param {float} val position of seeker handle in px
-   * @return {float} constrained position of seeker handle in px
-   */
-  constrainToSeekerMinMax(val = 0) {
-    if (val <= 0) {
-      return 0;
-    } else if (val >= this.seekerWidth) {
-      return this.seekerWidth;
-    }
-    return val;
-  }
-
-  /**
-   * Set the position of the seekbar's components
-   * (both fill and handle) according to the
-   * position supplied.
-   *
-   * @param {float} position position in px of seeker handle}
-   */
-  setSeekerPosition(position = 0) {
-    const state = this.state;
-    position = this.constrainToSeekerMinMax(position);
-
-    state.seekerFillWidth = position;
-    state.seekerPosition = position;
-
-    if (!state.seeking) {
-      state.seekerOffset = position;
-    }
-
-    this.setState(state);
-  }
-
-  /**
-   * Calculate the position that the seeker should be
-   * at along its track.
-   *
-   * @return {float} position of seeker handle in px based on currentTime
-   */
-  calculateSeekerPosition() {
-    const percent = this.state.currentTime / this.state.duration;
-    return this.seekerWidth * percent;
-  }
-
-  /**
-   * Return the time that the video should be at
-   * based on where the seeker handle is.
-   *
-   * @return {float} time in ms based on seekerPosition.
-   */
-  calculateTimeFromSeekerPosition() {
-    const percent = this.state.seekerPosition / this.seekerWidth;
-    return this.state.duration * percent;
-  }
-
-  /**
-   * Get our seekbar responder going
-   */
-  initSeekPanResponder() {
-    this.seekPanResponder = PanResponder.create({
-      // Ask to be the responder.
-      onStartShouldSetPanResponder: (_evt, _gestureState) => true,
-      onMoveShouldSetPanResponder: (_evt, _gestureState) => true,
-
-      /**
-       * When we start the pan tell the machine that we're
-       * seeking. This stops it from updating the seekbar
-       * position in the onProgress listener.
-       */
-      onPanResponderGrant: (evt, _gestureState) => {
-        const state = this.state;
-        // this.clearControlTimeout()
-        const position = evt.nativeEvent.locationX;
-        this.setSeekerPosition(position);
-        state.seeking = true;
-        this.setState(state);
-      },
-
-      /**
-       * When panning, update the seekbar position, duh.
-       */
-      onPanResponderMove: (evt, gestureState) => {
-        const position = this.state.seekerOffset + gestureState.dx;
-        this.setSeekerPosition(position);
-      },
-
-      /**
-       * On release we update the time and seek to it in the video.
-       * If you seek to the end of the video we fire the
-       * onEnd callback
-       */
-      onPanResponderRelease: (_evt, _gestureState) => {
-        const time = this.calculateTimeFromSeekerPosition();
-        const state = this.state;
-        if (time >= state.duration && !state.isLoading) {
-          state.paused = true;
-          this.onEnd();
-        } else {
-          this.video?.seek(time);
-          state.seeking = false;
-        }
-        this.setState(state);
-      },
-    });
+  videoSeek(position: number) {
+    this.setState({isSeeking: true});
+    this.video?.seek(position);
   }
 
   renderSeekBar() {
-    if (!this.seekPanResponder) {
-      return null;
-    }
-    const seekerStyle = [
-      styles.seekbarFill,
-      {
-        width: this.state.seekerFillWidth > 0 ? this.state.seekerFillWidth : 0,
-        backgroundColor: '#FFF',
-      },
-    ];
-
-    const seekerPositionStyle = [
-      styles.seekbarHandle,
-      {
-        left: this.state.seekerPosition > 0 ? this.state.seekerPosition : 0,
-      },
-    ];
-
-    const seekerPointerStyle = [
-      styles.seekbarCircle,
-      {backgroundColor: '#FFF'},
-    ];
-
     return (
-      <View
-        style={styles.seekbarContainer}
-        {...this.seekPanResponder.panHandlers}
-        {...styles.generalControls}>
-        <View
-          style={styles.seekbarTrack}
-          onLayout={event =>
-            (this.seekerWidth = event.nativeEvent.layout.width)
-          }
-          pointerEvents={'none'}>
-          <View style={seekerStyle} pointerEvents={'none'} />
-        </View>
-        <View style={seekerPositionStyle} pointerEvents={'none'}>
-          <View style={seekerPointerStyle} pointerEvents={'none'} />
-        </View>
-      </View>
+      <Seeker
+        currentTime={this.state.currentTime}
+        duration={this.state.duration}
+        isLoading={this.state.isLoading}
+        videoSeek={prop => this.videoSeek(prop)}
+        isUISeeking={this.state.isSeeking}
+      />
     );
   }
 
@@ -641,7 +511,8 @@ class VideoPlayer extends Component {
     return (
       <View style={styles.topControlsContainer}>
         <Text style={styles.controlOption}>
-          {this.srcList[this.state.srcListId]?.description || 'local file'}
+          {(this.srcList[this.state.srcListId] as AdditionnalSourceInfo)
+            ?.description || 'local file'}
         </Text>
         <View>
           <TouchableOpacity
@@ -665,6 +536,50 @@ class VideoPlayer extends Component {
   };
   onResizeModeSelected = (value: MultiValueControlPropType) => {
     this.setState({resizeMode: value});
+  };
+
+  onSelectedAudioTrackChange = (itemValue: string) => {
+    console.log('on audio value change ' + itemValue);
+    if (itemValue === 'none') {
+      this.setState({
+        selectedAudioTrack: SelectedVideoTrackType.DISABLED,
+      });
+    } else {
+      this.setState({
+        selectedAudioTrack: {
+          type: SelectedVideoTrackType.INDEX,
+          value: itemValue,
+        },
+      });
+    }
+  };
+
+  onSelectedTextTrackChange = (itemValue: string) => {
+    console.log('on value change ' + itemValue);
+    this.setState({
+      selectedTextTrack: {
+        type: this.textTracksSelectionBy === 'index' ? 'index' : 'language',
+        value: itemValue,
+      },
+    });
+  };
+
+  onSelectedVideoTrackChange = (itemValue: string) => {
+    console.log('on value change ' + itemValue);
+    if (itemValue === undefined || itemValue === 'auto') {
+      this.setState({
+        selectedVideoTrack: {
+          type: SelectedVideoTrackType.AUTO,
+        },
+      });
+    } else {
+      this.setState({
+        selectedVideoTrack: {
+          type: SelectedVideoTrackType.INDEX,
+          value: itemValue,
+        },
+      });
+    }
   };
 
   renderOverlay() {
@@ -783,6 +698,13 @@ class VideoPlayer extends Component {
                   onPress={this.onResizeModeSelected}
                   selected={this.state.resizeMode}
                 />
+                <ToggleControl
+                  isSelected={this.state.muted}
+                  onPress={() => {
+                    this.setState({muted: !this.state.muted});
+                  }}
+                  text="muted"
+                />
                 {Platform.OS === 'ios' ? (
                   <ToggleControl
                     isSelected={this.state.paused}
@@ -802,77 +724,22 @@ class VideoPlayer extends Component {
               </View>
               {this.renderSeekBar()}
               <View style={styles.generalControls}>
-                <Text style={styles.controlOption}>AudioTrack</Text>
-                {this.state.audioTracks?.length <= 0 ? (
-                  <Text style={styles.emptyPickerItem}>empty</Text>
-                ) : (
-                  <Picker
-                    style={styles.picker}
-                    itemStyle={styles.pickerItem}
-                    selectedValue={this.state.selectedAudioTrack?.value}
-                    onValueChange={itemValue => {
-                      console.log('on audio value change ' + itemValue);
-                      this.setState({
-                        selectedAudioTrack: {
-                          type: 'language',
-                          value: itemValue,
-                        },
-                      });
-                    }}>
-                    {this.state.audioTracks.map(track => {
-                      if (!track) {
-                        return;
-                      }
-                      return (
-                        <Picker.Item
-                          label={track.language}
-                          value={track.language}
-                          key={track.language}
-                        />
-                      );
-                    })}
-                  </Picker>
-                )}
-                <Text style={styles.controlOption}>TextTrack</Text>
-                {this.state.textTracks?.length <= 0 ? (
-                  <Text style={styles.emptyPickerItem}>empty</Text>
-                ) : (
-                  <Picker
-                    style={styles.picker}
-                    itemStyle={styles.pickerItem}
-                    selectedValue={this.state.selectedTextTrack?.value}
-                    onValueChange={itemValue => {
-                      console.log('on value change ' + itemValue);
-                      this.setState({
-                        selectedTextTrack: {
-                          type: this.textTracksSelectionBy === 'index' ? 'index': 'language',
-                          value: itemValue,
-                        },
-                      });
-                    }}>
-                    <Picker.Item label={'none'} value={'none'} key={'none'} />
-                    {this.state.textTracks.map(track => {
-                      if (!track) {
-                        return;
-                      }
-                      if (this.textTracksSelectionBy === 'index') {
-                        return (
-                          <Picker.Item
-                            label={`${track.index}`}
-                            value={track.index}
-                            key={track.index}
-                          />);
-                      } else {
-                        return (
-                          <Picker.Item
-                            label={track.language}
-                            value={track.language}
-                            key={track.language}
-                          />);
-                      }
-                    })}
-                  </Picker>
-                )}
+                <AudioTrackSelector
+                  audioTracks={this.state.audioTracks}
+                  selectedAudioTrack={this.state.selectedAudioTrack}
+                  onValueChange={this.onSelectedAudioTrackChange}
+                />
+                <TextTrackSelector
+                  textTracks={this.state.textTracks}
+                  selectedTextTrack={this.state.selectedTextTrack}
+                  onValueChange={this.onSelectedTextTrackChange}
+                  textTracksSelectionBy={this.textTracksSelectionBy}
+                />
+                <VideoTrackSelector
+                  videoTracks={this.state.videoTracks}
+                  selectedVideoTrack={this.state.selectedVideoTrack}
+                  onValueChange={this.onSelectedVideoTrackChange}
+                />
               </View>
             </View>
           </>
@@ -886,6 +753,9 @@ class VideoPlayer extends Component {
       ? styles.fullScreen
       : styles.halfScreen;
 
+    const currentSrc = this.srcList[this.state.srcListId];
+    const additionnal = currentSrc as AdditionnalSourceInfo;
+
     return (
       <TouchableOpacity style={viewStyle}>
         <Video
@@ -893,10 +763,10 @@ class VideoPlayer extends Component {
           ref={(ref: VideoRef) => {
             this.video = ref;
           }}
-          source={this.srcList[this.state.srcListId]}
-          textTracks={this.srcList[this.state.srcListId]?.textTracks}
-          adTagUrl={this.srcList[this.state.srcListId]?.adTagUrl}
-          drm={this.srcList[this.state.srcListId]?.drm}
+          source={currentSrc as ReactVideoSource}
+          textTracks={additionnal?.textTracks}
+          adTagUrl={additionnal?.adTagUrl}
+          drm={additionnal?.drm}
           style={viewStyle}
           rate={this.state.rate}
           paused={this.state.paused}
@@ -908,6 +778,7 @@ class VideoPlayer extends Component {
           onLoad={this.onLoad}
           onAudioTracks={this.onAudioTracks}
           onTextTracks={this.onTextTracks}
+          onVideoTracks={this.onVideoTracks}
           onTextTrackDataChanged={this.onTextTrackDataChanged}
           onProgress={this.onProgress}
           onEnd={this.onEnd}
@@ -923,6 +794,7 @@ class VideoPlayer extends Component {
           repeat={this.state.loop}
           selectedTextTrack={this.state.selectedTextTrack}
           selectedAudioTrack={this.state.selectedAudioTrack}
+          selectedVideoTrack={this.state.selectedVideoTrack}
           playInBackground={false}
           bufferConfig={{
             minBufferMs: 15000,
@@ -948,7 +820,7 @@ class VideoPlayer extends Component {
   render() {
     return (
       <View style={styles.container}>
-        {this.srcList[this.state.srcListId]?.noView
+        {(this.srcList[this.state.srcListId] as AdditionnalSourceInfo)?.noView
           ? null
           : this.renderVideoView()}
         {this.renderOverlay()}
@@ -956,168 +828,4 @@ class VideoPlayer extends Component {
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'black',
-  },
-  halfScreen: {
-    position: 'absolute',
-    top: 50,
-    left: 50,
-    bottom: 100,
-    right: 100,
-  },
-  fullScreen: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    right: 0,
-  },
-  bottomControls: {
-    backgroundColor: 'transparent',
-    borderRadius: 5,
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-  },
-  leftControls: {
-    backgroundColor: 'transparent',
-    borderRadius: 5,
-    position: 'absolute',
-    top: 20,
-    bottom: 20,
-    left: 20,
-  },
-  rightControls: {
-    backgroundColor: 'transparent',
-    borderRadius: 5,
-    position: 'absolute',
-    top: 20,
-    bottom: 20,
-    right: 20,
-  },
-  topControls: {
-    backgroundColor: 'transparent',
-    borderRadius: 4,
-    position: 'absolute',
-    top: 20,
-    left: 20,
-    right: 20,
-    flex: 1,
-    flexDirection: 'row',
-    overflow: 'hidden',
-    paddingBottom: 10,
-  },
-  generalControls: {
-    flex: 1,
-    flexDirection: 'row',
-    borderRadius: 4,
-    overflow: 'hidden',
-    paddingBottom: 10,
-  },
-  rateControl: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  volumeControl: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  resizeModeControl: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  leftRightControlOption: {
-    alignSelf: 'center',
-    fontSize: 11,
-    color: 'white',
-    padding: 10,
-    lineHeight: 12,
-  },
-  controlOption: {
-    alignSelf: 'center',
-    fontSize: 11,
-    color: 'white',
-    paddingLeft: 2,
-    paddingRight: 2,
-    lineHeight: 12,
-  },
-  pickerContainer: {
-    width: 100,
-    alignSelf: 'center',
-    color: 'white',
-    borderWidth: 1,
-    borderColor: 'red',
-  },
-  IndicatorStyle: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  seekbarContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    borderRadius: 4,
-    height: 30,
-  },
-  seekbarTrack: {
-    backgroundColor: '#333',
-    height: 1,
-    position: 'relative',
-    top: 14,
-    width: '100%',
-  },
-  seekbarFill: {
-    backgroundColor: '#FFF',
-    height: 1,
-    width: '100%',
-  },
-  seekbarHandle: {
-    position: 'absolute',
-    marginLeft: -7,
-    height: 28,
-    width: 28,
-  },
-  seekbarCircle: {
-    borderRadius: 12,
-    position: 'relative',
-    top: 8,
-    left: 8,
-    height: 12,
-    width: 12,
-  },
-  picker: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    width: 100,
-    height: 40,
-  },
-  pickerItem: {
-    color: 'white',
-    width: 100,
-    height: 40,
-  },
-  emptyPickerItem: {
-    color: 'white',
-    marginTop: 20,
-    marginLeft: 20,
-    flex: 1,
-    width: 100,
-    height: 40,
-  },
-  topControlsContainer: {
-    paddingTop: 30,
-  }
- });
-
 export default VideoPlayer;
