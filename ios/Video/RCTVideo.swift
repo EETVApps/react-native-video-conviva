@@ -481,6 +481,9 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
             NowPlayingInfoCenterManager.shared.updateMetadata()
         }
 
+        // register the player with the conviva session manager
+        ConvivaSessionsManager.sharedManager.setStreamPlayer(player: _player)
+
         _playerObserver.player = _player
         applyModifiers()
         _player?.actionAtItemEnd = .none
@@ -1266,6 +1269,9 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         _selectedTextTrackCriteria = nil
         _selectedAudioTrackCriteria = nil
         _presentingViewController = nil
+
+        // unregister player from the conviva session manager
+        ConvivaSessionsManager.sharedManager.setStreamPlayer(player: nil)
 
         ReactNativeVideoManager.shared.onInstanceRemoved(id: instanceId, player: _player)
         _player = nil

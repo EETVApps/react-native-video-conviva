@@ -23,6 +23,7 @@ import ConvivaAVFoundation
     private var onInitTagsDictionary:[String:Any]! = [String:Any]()
     private var sessionTagsDictionary:[String:Any]?
     private var playbackRequested:Bool = false
+    private weak var player:AVPlayer?
 
     // MARK: Intialization
     
@@ -119,9 +120,10 @@ import ConvivaAVFoundation
             videoAnalytics?.setContentInfo(contentInfo)
         }
         
-        if playbackRequested, let player = NowPlayingInfoCenterManager.shared.getStreamingPlayer() {
+        let avPlayer = self.player ?? NowPlayingInfoCenterManager.shared.getStreamingPlayer()
+        if playbackRequested, let streamer = avPlayer {
             // attach player to conviva
-            videoAnalytics?.setPlayer(player)
+            videoAnalytics?.setPlayer(streamer)
         }
     }
     
@@ -150,6 +152,11 @@ import ConvivaAVFoundation
         if playbackRequested {
             videoAnalytics?.reportPlaybackError(message, errorSeverity: ErrorSeverity.ERROR_WARNING)
         }
+    }
+
+    @objc public func setStreamPlayer(player:AVPlayer?) {
+        print("\(#fileID) \(#function) called")
+        self.player = player
     }
     
     @objc public func setSeekStart(startPosition:Int) {
