@@ -39,6 +39,7 @@ export type VideoSrc = Readonly<{
   cropStart?: Float;
   cropEnd?: Float;
   metadata?: VideoMetadata;
+  textTracksAllowChunklessPreparation?: boolean; // android
 }>;
 
 type DRMType = WithDefault<string, 'widevine'>;
@@ -225,7 +226,8 @@ export type OnTextTrackDataChangedData = Readonly<{
 
 export type OnVideoTracksData = Readonly<{
   videoTracks: {
-    trackId: Int32;
+    index: Int32;
+    tracksId?: string;
     codecs?: string;
     width?: Float;
     height?: Float;
@@ -284,6 +286,11 @@ export type OnAudioFocusChangedData = Readonly<{
 
 type ControlsStyles = Readonly<{
   hideSeekBar?: boolean;
+  seekIncrementMS?: number;
+}>;
+
+export type OnControlsVisibilityChange = Readonly<{
+  isVisible: boolean;
 }>;
 
 export interface VideoNativeProps extends ViewProps {
@@ -334,6 +341,7 @@ export interface VideoNativeProps extends ViewProps {
   useSecureView?: boolean; // Android
   bufferingStrategy?: BufferingStrategyType; // Android
   controlsStyles?: ControlsStyles; // Android
+  onControlsVisibilityChange?: DirectEventHandler<OnControlsVisibilityChange>;
   onVideoLoad?: DirectEventHandler<OnLoadData>;
   onVideoLoadStart?: DirectEventHandler<OnLoadStartData>;
   onVideoAspectRatio?: DirectEventHandler<OnVideoAspectRatioData>;
@@ -419,6 +427,8 @@ export interface VideoManagerType {
     reactTag: number,
   ) => Promise<void>;
   setVolume: (volume: number, reactTag: number) => Promise<void>;
+  getCurrentPosition: (reactTag: number) => Promise<number>;
+  setFullScreen: (fullScreen: boolean, reactTag: number) => Promise<void>;
 }
 
 export interface VideoDecoderPropertiesType {

@@ -4,6 +4,7 @@ import android.util.Log
 import com.brentvatne.common.toolbox.ReactBridgeUtils
 import com.brentvatne.exoplayer.ConvivaManager
 import com.brentvatne.exoplayer.ReactExoplayerView
+import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
@@ -131,6 +132,20 @@ class VideoManagerModule(reactContext: ReactApplicationContext?) : ReactContextB
     fun setVolume(volume: Float, reactTag: Int) {
         performOnPlayerView(reactTag) {
             it?.setVolumeModifier(volume)
+        }
+    }
+
+    @ReactMethod
+    fun getCurrentPosition(reactTag: Int, promise: Promise) {
+        performOnPlayerView(reactTag) {
+            it?.getCurrentPosition(promise)
+        }
+    }
+
+    @ReactMethod
+    fun setFullScreen(fullScreen: Boolean, reactTag: Int) {
+        performOnPlayerView(reactTag) {
+            it?.setFullscreen(fullScreen)
         }
     }
 

@@ -121,6 +121,26 @@ Example:
 }
 ```
 
+### `onControlsVisibilityChange`
+
+<PlatformsList types={['Android']} />
+
+Callback function that is called when the controls are hidden or shown. Not possible on iOS.
+
+Payload:
+
+| Property    | Type    | Description                                    |
+| ----------- | ------- | ---------------------------------------------- |
+| isVisible | boolean | Boolean indicating whether controls are visible |
+
+Example:
+
+```javascript
+{
+  isVisible: true;
+}
+```
+
 ### `onEnd`
 
 <PlatformsList types={['All']} />
@@ -237,9 +257,9 @@ Example:
     { title: '#3 English Director Commentary', language: 'en', index: 2, type: 'text/vtt' }
   ],
   videoTracks: [
-    { bitrate: 3987904, codecs: "avc1.640028", height: 720, trackId: "f1-v1-x3", width: 1280 },
-    { bitrate: 7981888, codecs: "avc1.640028", height: 1080, trackId: "f2-v1-x3", width: 1920 },
-    { bitrate: 1994979, codecs: "avc1.4d401f", height: 480, trackId: "f3-v1-x3", width: 848 }
+    { index: 0, bitrate: 3987904, codecs: "avc1.640028", height: 720, trackId: "f1-v1-x3", width: 1280 },
+    { index: 1, bitrate: 7981888, codecs: "avc1.640028", height: 1080, trackId: "f2-v1-x3", width: 1920 },
+    { index: 2, bitrate: 1994979, codecs: "avc1.4d401f", height: 480, trackId: "f3-v1-x3", width: 848 }
   ]
 }
 ```
@@ -548,14 +568,16 @@ Callback function that is called when video tracks change
 
 Payload:
 
-| Property | Type    | Description                           |
-| -------- | ------- | ------------------------------------- |
-| trackId  | number  | Internal track ID                     |
-| codecs   | string  | MimeType of codec used for this track |
-| width    | number  | Track width                           |
-| height   | number  | Track height                          |
-| bitrate  | number  | Bitrate in bps                        |
-| selected | boolean | true if track is selected for playing |
+| Property | Type    | Description                                                     |
+| -------- | ------- | --------------------------------------------------------------- |
+| index    | number  | index of the track                                              |
+| trackId  | string  | Internal track ID                                               |
+| codecs   | string  | MimeType of codec used for this track                           |
+| width    | number  | Track width                                                     |
+| height   | number  | Track height                                                    |
+| bitrate  | number  | Bitrate in bps                                                  |
+| selected | boolean | true if track is selected for playing                           |
+| rotation | number  | 0, 90, 180 or 270 rotation to apply to the track (android only) |
 
 Example:
 
@@ -563,12 +585,14 @@ Example:
 {
   videoTracks: [
     {
-      trackId: 0,
+      index: O,
+      trackId: "0",
       codecs: 'video/mp4',
       width: 1920,
       height: 1080,
       bitrate: 10000,
       selected: true,
+      rotation: 0,
     },
   ];
 }

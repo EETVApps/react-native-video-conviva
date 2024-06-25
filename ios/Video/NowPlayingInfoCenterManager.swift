@@ -61,11 +61,11 @@ class NowPlayingInfoCenterManager {
             return
         }
 
-        if let observer = observers[players.hashValue] {
+        if let observer = observers[player.hashValue] {
             observer.invalidate()
         }
 
-        observers.removeValue(forKey: players.hashValue)
+        observers.removeValue(forKey: player.hashValue)
         players.remove(player)
 
         if currentPlayer == player {
@@ -150,7 +150,7 @@ class NowPlayingInfoCenterManager {
             guard let self, let player = self.currentPlayer else {
                 return .commandFailed
             }
-            let newTime = player.currentTime() - CMTime(seconds: SEEK_INTERVAL_SECONDS, preferredTimescale: .max)
+            let newTime = player.currentTime() - CMTime(seconds: self.SEEK_INTERVAL_SECONDS, preferredTimescale: .max)
             player.seek(to: newTime)
             return .success
         }
@@ -160,7 +160,7 @@ class NowPlayingInfoCenterManager {
                 return .commandFailed
             }
 
-            let newTime = player.currentTime() + CMTime(seconds: SEEK_INTERVAL_SECONDS, preferredTimescale: .max)
+            let newTime = player.currentTime() + CMTime(seconds: self.SEEK_INTERVAL_SECONDS, preferredTimescale: .max)
             player.seek(to: newTime)
             return .success
         }
@@ -226,6 +226,12 @@ class NowPlayingInfoCenterManager {
             })
         }
 
+        if CMTIME_IS_INDEFINITE(currentItem.asset.duration) {
+            nowPlayingInfo[MPNowPlayingInfoPropertyIsLiveStream] = true
+        } else {
+            nowPlayingInfo[MPNowPlayingInfoPropertyIsLiveStream] = false
+        }
+
         nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = currentItem.duration.seconds
         nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentItem.currentTime().seconds
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
@@ -245,6 +251,11 @@ class NowPlayingInfoCenterManager {
             nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentItem.currentTime().seconds.rounded()
             nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
 
+            if CMTIME_IS_INDEFINITE(currentItem.asset.duration) {
+                nowPlayingInfo[MPNowPlayingInfoPropertyIsLiveStream] = true
+            } else {
+                nowPlayingInfo[MPNowPlayingInfoPropertyIsLiveStream] = false
+            }
             MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
         }
     }
@@ -266,15 +277,15 @@ class NowPlayingInfoCenterManager {
 
             // case where there is new player that is not paused
             // In this case event is triggered by non currentPlayer
-            if rate != 0 && currentPlayer != player {
-                setCurrentPlayer(player: player)
+            if rate != 0 && self.currentPlayer != player {
+                self.setCurrentPlayer(player: player)
                 return
             }
 
             // case where currentPlayer was paused
             // In this case event is triggeret by currentPlayer
-            if rate == 0 && currentPlayer == player {
-                findNewCurrentPlayer()
+            if rate == 0 && self.currentPlayer == player {
+                self.findNewCurrentPlayer()
             }
         }
     }

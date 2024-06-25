@@ -23,6 +23,7 @@ export type ReactVideoSourceProperties = {
   cropStart?: number;
   cropEnd?: number;
   metadata?: VideoMetadata;
+  textTracksAllowChunklessPreparation?: boolean;
 };
 
 export type ReactVideoSource = Readonly<
@@ -117,7 +118,7 @@ export enum SelectedVideoTrackType {
 
 export type SelectedVideoTrack = {
   type: SelectedVideoTrackType;
-  value?: number;
+  value?: string | number;
 };
 
 export type SubtitleStyle = {
@@ -204,6 +205,7 @@ export type AudioOutput = 'speaker' | 'earpiece';
 
 export type ControlsStyles = {
   hideSeekBar?: boolean;
+  seekIncrementMS?: number;
 };
 
 export interface ReactVideoProps extends ReactVideoEvents, ViewProps {
