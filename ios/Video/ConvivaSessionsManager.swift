@@ -9,6 +9,7 @@
 import UIKit
 import ConvivaSDK
 import ConvivaAVFoundation
+import AVFoundation
 
 @objc public class ConvivaSessionsManager: NSObject {
 
