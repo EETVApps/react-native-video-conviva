@@ -150,13 +150,23 @@ import ConvivaAVFoundation
         }
 
         if playbackRequested {
-            videoAnalytics?.reportPlaybackError(message, errorSeverity: ErrorSeverity.ERROR_WARNING)
+            videoAnalytics?.reportPlaybackError(message, errorSeverity: ErrorSeverity.ERROR_FATAL)
         }
     }
 
     @objc public func setStreamPlayer(player:AVPlayer?) {
         print("\(#fileID) \(#function) called")
+        if self.player != nil && self.player != player {
+            cleanupSession()
+        }
         self.player = player
+    }
+
+    @objc public func removeStreamPlayer(player:AVPlayer?) {
+        print("\(#fileID) \(#function) called")
+        if self.player == player {
+            cleanupSession()
+        }
     }
     
     @objc public func setSeekStart(startPosition:Int) {

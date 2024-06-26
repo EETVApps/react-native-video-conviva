@@ -1271,7 +1271,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         _presentingViewController = nil
 
         // unregister player from the conviva session manager
-        ConvivaSessionsManager.sharedManager.setStreamPlayer(player: nil)
+        ConvivaSessionsManager.sharedManager.removeStreamPlayer(player: _player)
 
         ReactNativeVideoManager.shared.onInstanceRemoved(id: instanceId, player: _player)
         _player = nil
