@@ -1,6 +1,6 @@
 {
     "name": "react-native-video-conviva",
-    "version": "6.3.0-2",
+    "version": "6.3.0-3",
     "description": "A <Video /> element for react-native with Conviva integration",
     "main": "lib/index",
     "source": "src/index",
