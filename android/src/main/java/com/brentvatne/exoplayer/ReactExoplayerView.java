@@ -2363,4 +2363,9 @@ public class ReactExoplayerView extends FrameLayout implements
     public interface PlayerCreatedCallback {
         void onPlayerCreated(ExoPlayer player);
     }
+
+    public void restartInSd() {
+        player.setTrackSelectionParameters(player.getTrackSelectionParameters().buildUpon().setMaxVideoSizeSd().build());
+        player.prepare();
+    }
 }

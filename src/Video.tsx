@@ -75,6 +75,7 @@ export interface VideoRef {
   setVolume: (volume: number) => void;
   getCurrentPosition: () => Promise<number>;
   setFullScreen: (fullScreen: boolean) => void;
+  restartInSd: () => void;
 }
 
 const Video = forwardRef<VideoRef, ReactVideoProps>(
@@ -576,6 +577,22 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
       [onExternalPlaybackChange],
     );
 
+    const restartInSd = useCallback(() => {
+      if (!nativeRef.current) {
+        console.warn('Video Component is not mounted');
+        return;
+      }
+      const restartInSdFunction = () => {
+        VideoManager.restartInSd(getReactTag(nativeRef));
+      };
+      Platform.select({
+        android: restartInSdFunction,
+        default: () => {
+          // TODO
+        },
+      })();
+    }, []);
+
     const _onBandwidthUpdate = useCallback(
       (e: NativeSyntheticEvent<OnBandwidthUpdateData>) => {
         onBandwidthUpdate?.(e.nativeEvent);
@@ -675,6 +692,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         setVolume,
         getCurrentPosition,
         setFullScreen,
+        restartInSd,
       }),
       [
         convivaInit,
@@ -693,6 +711,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         setVolume,
         getCurrentPosition,
         setFullScreen,
+        restartInSd,
       ],
     );
 

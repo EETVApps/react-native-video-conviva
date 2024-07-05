@@ -149,6 +149,13 @@ class VideoManagerModule(reactContext: ReactApplicationContext?) : ReactContextB
         }
     }
 
+    @ReactMethod
+    fun restartInSd(reactTag: Int){
+        performOnPlayerView(reactTag){
+            it?.restartInSd()
+        }
+    }
+
     companion object {
         private const val REACT_CLASS = "VideoManager"
     }
