@@ -266,7 +266,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
       }
 
       const convivaInitFunction = () => {
-        NativeVideoManager.convivaInitCmd(customerKey, gatewayUrl, playerName, tags, enableDebug, getReactTag(nativeRef));
+        NativeVideoManager.convivaInitCmd(getReactTag(nativeRef), customerKey, gatewayUrl, playerName, tags, enableDebug);
       };
       Platform.select({
         ios: convivaInitFunction,
@@ -283,7 +283,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         return;
       }
       const reportPlaybackRequestedFunction = () => {
-        NativeVideoManager.reportPlaybackRequestedCmd(assetName, isLive, tags, getReactTag(nativeRef));
+        NativeVideoManager.reportPlaybackRequestedCmd(getReactTag(nativeRef), assetName, isLive, tags);
       };
       Platform.select({
         ios: reportPlaybackRequestedFunction,
@@ -300,7 +300,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         return;
       }
       const setPlaybackDataFunction = () => {
-        NativeVideoManager.setPlaybackDataCmd(streamUrl, viewerId, tags, getReactTag(nativeRef));
+        NativeVideoManager.setPlaybackDataCmd(getReactTag(nativeRef), streamUrl, viewerId, tags);
       };
       Platform.select({
         ios: setPlaybackDataFunction,
@@ -317,7 +317,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         return;
       }
       const reportWarningFunction = () => {
-        NativeVideoManager.reportWarningCmd(message, getReactTag(nativeRef));
+        NativeVideoManager.reportWarningCmd(getReactTag(nativeRef), message);
       };
       Platform.select({
         ios: reportWarningFunction,
@@ -334,7 +334,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         return;
       }
       const reportErrorFunction = () => {
-        NativeVideoManager.reportErrorCmd(message, tags, getReactTag(nativeRef));
+        NativeVideoManager.reportErrorCmd(getReactTag(nativeRef), message, tags);
       };
       Platform.select({
         ios: reportErrorFunction,
@@ -590,7 +590,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         return;
       }
       const restartInSdFunction = () => {
-        VideoManager.restartInSd(getReactTag(nativeRef));
+        NativeVideoManager.restartInSdCmd(getReactTag(nativeRef));
       };
       Platform.select({
         android: restartInSdFunction,

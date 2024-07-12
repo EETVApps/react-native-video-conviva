@@ -43,6 +43,7 @@ export interface VideoManagerType {
   reportPlaybackEndedCmd: (
     reactTag: Int32
   ) => Promise<void>;
+  restartInSdCmd: (reactTag: Int32) => Promise<void>;
   seekCmd: (reactTag: Int32, time: Float, tolerance?: Float) => Promise<void>;
   setPlayerPauseStateCmd: (reactTag: Int32, paused: boolean) => Promise<void>;
   setLicenseResultCmd: (
