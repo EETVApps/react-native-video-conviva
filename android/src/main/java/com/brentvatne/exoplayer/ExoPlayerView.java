@@ -1,5 +1,6 @@
 package com.brentvatne.exoplayer;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -15,7 +16,6 @@ import androidx.media3.common.util.Assertions;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.ui.SubtitleView;
 
-import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.SurfaceView;
@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.List;
 
+@SuppressLint("ViewConstructor")
 public final class ExoPlayerView extends FrameLayout implements AdViewProvider {
     private final static String TAG = "ExoPlayerView";
     private View surfaceView;
@@ -48,15 +49,7 @@ public final class ExoPlayerView extends FrameLayout implements AdViewProvider {
     private boolean hideShutterView = false;
 
     public ExoPlayerView(Context context) {
-        this(context, null);
-    }
-
-    public ExoPlayerView(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public ExoPlayerView(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
+        super(context, null, 0);
 
         this.context = context;
 
@@ -214,7 +207,7 @@ public final class ExoPlayerView extends FrameLayout implements AdViewProvider {
      * @param resizeMode The resize mode.
      */
     public void setResizeMode(@ResizeMode.Mode int resizeMode) {
-        if (layout.getResizeMode() != resizeMode) {
+        if (layout != null && layout.getResizeMode() != resizeMode) {
             layout.setResizeMode(resizeMode);
             post(measureAndLayout);
         }
@@ -243,7 +236,7 @@ public final class ExoPlayerView extends FrameLayout implements AdViewProvider {
                 Format format = group.getTrackFormat(0);
 
                 // update aspect ratio !
-                layout.setAspectRatio(format.height == 0 ? 1 : (format.width * format.pixelWidthHeightRatio) / format.height);
+                layout.setVideoAspectRatio(format.height == 0 ? 1 : (format.width * format.pixelWidthHeightRatio) / format.height);
                 return;
             }
         }
@@ -265,13 +258,13 @@ public final class ExoPlayerView extends FrameLayout implements AdViewProvider {
 
         @Override
         public void onVideoSizeChanged(VideoSize videoSize) {
-            boolean isInitialRatio = layout.getAspectRatio() == 0;
+            boolean isInitialRatio = layout.getVideoAspectRatio() == 0;
             if (videoSize.height == 0 || videoSize.width == 0) {
                 // When changing video track we receive an ghost state with height / width = 0
                 // No need to resize the view in that case
                 return;
             }
-            layout.setAspectRatio((videoSize.width * videoSize.pixelWidthHeightRatio) / videoSize.height);
+            layout.setVideoAspectRatio((videoSize.width * videoSize.pixelWidthHeightRatio) / videoSize.height);
 
             // React native workaround for measuring and layout on initial load.
             if (isInitialRatio) {

@@ -7,7 +7,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.media3.common.util.Util;
 
 import com.brentvatne.common.api.BufferConfig;
 import com.brentvatne.common.api.BufferingStrategy;
@@ -18,20 +17,17 @@ import com.brentvatne.common.api.SideLoadedTextTrackList;
 import com.brentvatne.common.api.Source;
 import com.brentvatne.common.api.SubtitleStyle;
 import com.brentvatne.common.api.ViewType;
-import com.brentvatne.common.react.VideoEventEmitter;
+import com.brentvatne.common.react.EventTypes;
 import com.brentvatne.common.toolbox.DebugLog;
 import com.brentvatne.common.toolbox.ReactBridgeUtils;
 import com.brentvatne.react.ReactNativeVideoManager;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.common.MapBuilder;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.annotations.ReactProp;
 
-import java.util.ArrayList;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -41,8 +37,6 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String REACT_CLASS = "RCTVideo";
     private static final String PROP_SRC = "src";
     private static final String PROP_AD_TAG_URL = "adTagUrl";
-    private static final String PROP_DRM = "drm";
-    private static final String PROP_SRC_HEADERS = "requestHeaders";
     private static final String PROP_RESIZE_MODE = "resizeMode";
     private static final String PROP_REPEAT = "repeat";
     private static final String PROP_SELECTED_AUDIO_TRACK = "selectedAudioTrack";
@@ -82,7 +76,6 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_DEBUG = "debug";
     private static final String PROP_CONTROLS_STYLES = "controlsStyles";
 
-
     private final ReactExoplayerConfig config;
 
     public ReactExoplayerViewManager(ReactExoplayerConfig config) {
@@ -110,17 +103,13 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
 
     @Override
     public @Nullable Map<String, Object> getExportedCustomDirectEventTypeConstants() {
-        MapBuilder.Builder<String, Object> builder = MapBuilder.builder();
-        for (String event : VideoEventEmitter.Events) {
-            builder.put(event, MapBuilder.of("registrationName", event));
-        }
-        return builder.build();
+        return EventTypes.Companion.toMap();
     }
 
-    @ReactProp(name = PROP_DRM)
-    public void setDRM(final ReactExoplayerView videoView, @Nullable ReadableMap drm) {
-        DRMProps drmProps = DRMProps.parse(drm);
-        videoView.setDrm(drmProps);
+    @Override
+    public void addEventEmitters(@NonNull ThemedReactContext reactContext, @NonNull ReactExoplayerView view) {
+        super.addEventEmitters(reactContext, view);
+        view.eventEmitter.addEventEmitters(reactContext, view);
     }
 
     @ReactProp(name = PROP_SRC)
@@ -213,7 +202,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     }
 
     @ReactProp(name = PROP_TEXT_TRACKS)
-    public void setPropTextTracks(final ReactExoplayerView videoView,
+    public void setTextTracks(final ReactExoplayerView videoView,
                                   @Nullable ReadableArray textTracks) {
         SideLoadedTextTrackList sideLoadedTextTracks = SideLoadedTextTrackList.Companion.parse(textTracks);
         videoView.setTextTracks(sideLoadedTextTracks);
@@ -255,12 +244,12 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     }
 
     @ReactProp(name = PROP_MAXIMUM_BIT_RATE)
-    public void setMaxBitRate(final ReactExoplayerView videoView, final int maxBitRate) {
-        videoView.setMaxBitRateModifier(maxBitRate);
+    public void setMaxBitRate(final ReactExoplayerView videoView, final float maxBitRate) {
+        videoView.setMaxBitRateModifier((int)maxBitRate);
     }
 
     @ReactProp(name = PROP_MIN_LOAD_RETRY_COUNT)
-    public void minLoadRetryCount(final ReactExoplayerView videoView, final int minLoadRetryCount) {
+    public void setMinLoadRetryCount(final ReactExoplayerView videoView, final int minLoadRetryCount) {
         videoView.setMinLoadRetryCountModifier(minLoadRetryCount);
     }
 
@@ -320,11 +309,10 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         videoView.setSubtitleStyle(SubtitleStyle.parse(src));
     }
 
-    @ReactProp(name = PROP_SHUTTER_COLOR, customType = "Color")
-    public void setShutterColor(final ReactExoplayerView videoView, final Integer color) {
-        videoView.setShutterColor(color == null ? Color.BLACK : color);
+    @ReactProp(name = PROP_SHUTTER_COLOR, defaultInt = 0)
+    public void setShutterColor(final ReactExoplayerView videoView, final int color) {
+        videoView.setShutterColor(color == 0 ? Color.BLACK : color);
     }
-
 
     @ReactProp(name = PROP_BUFFER_CONFIG)
     public void setBufferConfig(final ReactExoplayerView videoView, @Nullable ReadableMap bufferConfig) {

@@ -1,7 +1,6 @@
 package com.brentvatne.react
 
 import android.util.Log
-import com.brentvatne.common.toolbox.ReactBridgeUtils
 import com.brentvatne.exoplayer.ConvivaManager
 import com.brentvatne.exoplayer.ReactExoplayerView
 import com.facebook.react.bridge.Promise
@@ -15,8 +14,6 @@ import com.facebook.react.uimanager.common.UIManagerType
 import kotlin.math.roundToInt
 
 class VideoManagerModule(reactContext: ReactApplicationContext?) : ReactContextBaseJavaModule(reactContext) {
-    private var convivaManager: ConvivaManager? = null
-
     override fun getName(): String = REACT_CLASS
 
     private fun performOnPlayerView(reactTag: Int, callback: (ReactExoplayerView?) -> Unit) {
@@ -41,7 +38,44 @@ class VideoManagerModule(reactContext: ReactApplicationContext?) : ReactContextB
     }
 
     @ReactMethod
-    fun convivaInit(customerKey: String, gatewayUrl: String?, playerName: String, tags: ReadableMap, enableDebug: Boolean, reactTag: Int) {
+    fun setPlayerPauseStateCmd(reactTag: Int, paused: Boolean?) {
+        performOnPlayerView(reactTag) {
+            it?.setPausedModifier(paused!!)
+        }
+    }
+
+    @ReactMethod
+    fun seekCmd(reactTag: Int, time: Float, tolerance: Float) {
+        performOnPlayerView(reactTag) {
+            it?.seekTo((time * 1000f).roundToInt().toLong())
+        }
+    }
+
+    @ReactMethod
+    fun setVolumeCmd(reactTag: Int, volume: Float) {
+        performOnPlayerView(reactTag) {
+            it?.setVolumeModifier(volume)
+        }
+    }
+
+    @ReactMethod
+    fun setFullScreenCmd(reactTag: Int, fullScreen: Boolean) {
+        performOnPlayerView(reactTag) {
+            it?.setFullscreen(fullScreen)
+        }
+    }
+
+    @ReactMethod
+    fun getCurrentPosition(reactTag: Int, promise: Promise) {
+        performOnPlayerView(reactTag) {
+            it?.getCurrentPosition(promise)
+        }
+    }
+
+    private var convivaManager: ConvivaManager? = null
+
+    @ReactMethod
+    fun convivaInitCmd(reactTag: Int, customerKey: String, gatewayUrl: String?, playerName: String, tags: ReadableMap, enableDebug: Boolean) {
         performOnPlayerView(reactTag) { exoplayerView ->
             exoplayerView?.let {
                 convivaManager = ConvivaManager(exoplayerView.context, customerKey, gatewayUrl, playerName, tags.toHashMap(), enableDebug)
@@ -55,7 +89,7 @@ class VideoManagerModule(reactContext: ReactApplicationContext?) : ReactContextB
     }
 
     @ReactMethod
-    fun reportPlaybackRequested(assetName: String, isLive: Boolean, tags: ReadableMap, reactTag: Int) {
+    fun reportPlaybackRequestedCmd(reactTag: Int, assetName: String, isLive: Boolean, tags: ReadableMap) {
         // Forcing onto UI thread to prevent race condition with init
         UiThreadUtil.runOnUiThread {
             convivaManager?.reportPlaybackRequested(assetName, isLive, tags.toHashMap())
@@ -66,7 +100,7 @@ class VideoManagerModule(reactContext: ReactApplicationContext?) : ReactContextB
     }
 
     @ReactMethod
-    fun setPlaybackData(streamUrl: String?, viewerId: String, tags: ReadableMap, reactTag: Int) {
+    fun setPlaybackDataCmd(reactTag: Int, streamUrl: String?, viewerId: String, tags: ReadableMap) {
         // Forcing onto UI thread to prevent race condition with init
         UiThreadUtil.runOnUiThread {
             convivaManager?.setPlaybackData(streamUrl, viewerId, tags.toHashMap())
@@ -77,7 +111,7 @@ class VideoManagerModule(reactContext: ReactApplicationContext?) : ReactContextB
     }
 
     @ReactMethod
-    fun reportWarning(message: String, reactTag: Int) {
+    fun reportWarningCmd(reactTag: Int, message: String) {
         // Forcing onto UI thread to prevent race condition with init
         UiThreadUtil.runOnUiThread {
             convivaManager?.reportWarning(message)
@@ -88,7 +122,7 @@ class VideoManagerModule(reactContext: ReactApplicationContext?) : ReactContextB
     }
 
     @ReactMethod
-    fun reportError(message: String, tags: ReadableMap, reactTag: Int) {
+    fun reportErrorCmd(reactTag: Int, message: String, tags: ReadableMap) {
         // Forcing onto UI thread to prevent race condition with init
         UiThreadUtil.runOnUiThread {
             convivaManager?.reportError(message, tags.toHashMap())
@@ -99,7 +133,7 @@ class VideoManagerModule(reactContext: ReactApplicationContext?) : ReactContextB
     }
 
     @ReactMethod
-    fun reportPlaybackEnded(reactTag: Int) {
+    fun reportPlaybackEndedCmd(reactTag: Int) {
         // Forcing onto UI thread to prevent race condition with init
         UiThreadUtil.runOnUiThread {
             convivaManager?.reportPlaybackEnded()
@@ -108,55 +142,13 @@ class VideoManagerModule(reactContext: ReactApplicationContext?) : ReactContextB
                 }
         }
     }
-
-    @ReactMethod
-    fun setPlayerPauseState(paused: Boolean?, reactTag: Int) {
-        performOnPlayerView(reactTag) {
-            it?.setPausedModifier(paused!!)
-        }
-    }
-
-    @ReactMethod
-    fun seek(info: ReadableMap, reactTag: Int) {
-        if (!info.hasKey("time")) {
-            return
-        }
-
-        val time = ReactBridgeUtils.safeGetInt(info, "time")
-        performOnPlayerView(reactTag) {
-            it?.seekTo((time * 1000f).roundToInt().toLong())
-        }
-    }
-
-    @ReactMethod
-    fun setVolume(volume: Float, reactTag: Int) {
-        performOnPlayerView(reactTag) {
-            it?.setVolumeModifier(volume)
-        }
-    }
-
-    @ReactMethod
-    fun getCurrentPosition(reactTag: Int, promise: Promise) {
-        performOnPlayerView(reactTag) {
-            it?.getCurrentPosition(promise)
-        }
-    }
-
-    @ReactMethod
-    fun setFullScreen(fullScreen: Boolean, reactTag: Int) {
-        performOnPlayerView(reactTag) {
-            it?.setFullscreen(fullScreen)
-        }
-    }
-
-    @ReactMethod
-    fun restartInSd(reactTag: Int){
+	
+	@ReactMethod
+    fun restartInSdCmd(reactTag: Int){
         performOnPlayerView(reactTag){
             it?.restartInSd()
         }
-    }
-
-    companion object {
+    }    companion object {
         private const val REACT_CLASS = "VideoManager"
     }
 }

@@ -30,73 +30,59 @@ class RCTVideoManager: RCTViewManager {
         }
     }
 
-    @objc(save:reactTag:resolver:rejecter:)
-    func save(options: NSDictionary, reactTag: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    @objc(seekCmd:time:tolerance:)
+    func seekCmd(_ reactTag: NSNumber, time: NSNumber, tolerance: NSNumber) {
         performOnVideoView(withReactTag: reactTag, callback: { videoView in
-            videoView?.save(options: options, resolve: resolve, reject: reject)
+            videoView?.setSeek(time, tolerance)
         })
     }
 
-    @objc(seek:reactTag:)
-    func seek(info: NSDictionary, reactTag: NSNumber) {
-        performOnVideoView(withReactTag: reactTag, callback: { videoView in
-            videoView?.setSeek(info)
-        })
-    }
-
-    @objc(setLicenseResult:licenseUrl:reactTag:)
-    func setLicenseResult(license: NSString, licenseUrl: NSString, reactTag: NSNumber) {
+    @objc(setLicenseResultCmd:license:licenseUrl:)
+    func setLicenseResultCmd(_ reactTag: NSNumber, license: NSString, licenseUrl: NSString) {
         performOnVideoView(withReactTag: reactTag, callback: { videoView in
             videoView?.setLicenseResult(license as String, licenseUrl as String)
         })
     }
 
-    @objc(setLicenseResultError:licenseUrl:reactTag:)
-    func setLicenseResultError(error: NSString, licenseUrl: NSString, reactTag: NSNumber) {
+    @objc(setLicenseResultErrorCmd:error:licenseUrl:)
+    func setLicenseResultErrorCmd(_ reactTag: NSNumber, error: NSString, licenseUrl: NSString) {
         performOnVideoView(withReactTag: reactTag, callback: { videoView in
             videoView?.setLicenseResultError(error as String, licenseUrl as String)
         })
     }
 
-    @objc(dismissFullscreenPlayer:)
-    func dismissFullscreenPlayer(_ reactTag: NSNumber) {
+    @objc(setPlayerPauseStateCmd:paused:)
+    func setPlayerPauseStateCmd(_ reactTag: NSNumber, paused: Bool) {
         performOnVideoView(withReactTag: reactTag, callback: { videoView in
-            videoView?.dismissFullscreenPlayer()
+            videoView?.setPaused(paused)
         })
     }
 
-    @objc(presentFullscreenPlayer:)
-    func presentFullscreenPlayer(_ reactTag: NSNumber) {
+    @objc(setVolumeCmd:volume:)
+    func setVolumeCmd(_ reactTag: NSNumber, volume: Float) {
         performOnVideoView(withReactTag: reactTag, callback: { videoView in
-            videoView?.presentFullscreenPlayer()
+            videoView?.setVolume(volume)
         })
     }
 
-    @objc(setPlayerPauseState:reactTag:)
-    func setPlayerPauseState(paused: NSNumber, reactTag: NSNumber) {
-        performOnVideoView(withReactTag: reactTag, callback: { videoView in
-            videoView?.setPaused(paused.boolValue)
-        })
-    }
-
-    @objc(setVolume:reactTag:)
-    func setVolume(value: Float, reactTag: NSNumber) {
-        performOnVideoView(withReactTag: reactTag, callback: { videoView in
-            videoView?.setVolume(value)
-        })
-    }
-
-    @objc(getCurrentPosition:resolver:rejecter:)
-    func getCurrentPosition(reactTag: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-        performOnVideoView(withReactTag: reactTag, callback: { videoView in
-            videoView?.getCurrentPlaybackTime(resolve, reject)
-        })
-    }
-
-    @objc(setFullScreen:reactTag:)
-    func setFullScreen(fullScreen: Bool, reactTag: NSNumber) {
+    @objc(setFullScreenCmd:fullscreen:)
+    func setFullScreenCmd(_ reactTag: NSNumber, fullScreen: Bool) {
         performOnVideoView(withReactTag: reactTag, callback: { videoView in
             videoView?.setFullscreen(fullScreen)
+        })
+    }
+
+    @objc(save:options:resolve:reject:)
+    func save(_ reactTag: NSNumber, options: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        performOnVideoView(withReactTag: reactTag, callback: { videoView in
+            videoView?.save(options, resolve, reject)
+        })
+    }
+
+    @objc(getCurrentPosition:resolve:reject:)
+    func getCurrentPosition(_ reactTag: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+        performOnVideoView(withReactTag: reactTag, callback: { videoView in
+            videoView?.getCurrentPlaybackTime(resolve, reject)
         })
     }
 
@@ -105,43 +91,43 @@ class RCTVideoManager: RCTViewManager {
     }
     
     //MARK: - Conviva bridging methods
-    @objc(convivaInit:gatewayUrl:playerName:tags:enableDebug:reactTag:)
-    func convivaInit(customerKey: String, gatewayUrl: String, playerName: String, tags : [String:Any], enableDebug : Bool, reactTag : Int)  {
+    @objc(convivaInitCmd:gatewayUrl:playerName:tags:enableDebug:)
+    func convivaInitCmd(_ reactTag: NSNumber, customerKey: String, gatewayUrl: String, playerName: String, tags : [String:Any], enableDebug : Bool)  {
         ConvivaSessionsManager.sharedManager.initialiseConviva(customerKey: customerKey, gatewayUrl: gatewayUrl, playerName: playerName, tags: tags, enableDebug: enableDebug)
     }
     
-    @objc(reportPlaybackRequested:isLive:tags:reactTag:)
-    func reportPlaybackRequested(assetName: String, isLive: Bool, tags : [String:Any], reactTag : Int) {
+    @objc(reportPlaybackRequestedCmd:assetName:isLive:tags:)
+    func reportPlaybackRequestedCmd(_ reactTag: NSNumber, assetName: String, isLive: Bool, tags : [String:Any]) {
         ConvivaSessionsManager.sharedManager.reportPlaybackRequested(assetName: assetName, isLive: isLive, tags: tags)
     }
     
-    @objc(setPlaybackData:viewerId:tags:reactTag:)
-    func setPlaybackData(streamUrl: String, viewerId: String, tags : [String:Any], reactTag : Int) {
+    @objc(setPlaybackDataCmd:streamUrl:viewerId:tags:)
+    func setPlaybackDataCmd(_ reactTag: NSNumber, streamUrl: String, viewerId: String, tags : [String:Any]) {
         ConvivaSessionsManager.sharedManager.setPlaybackData(streamUrl: streamUrl, viewerId: viewerId, tags: tags)
     }
     
-    @objc(reportWarning:reactTag:)
-    func reportWarning(message: String, reactTag : Int) {
+    @objc(reportWarningCmd:message:)
+    func reportWarningCmd(_ reactTag: NSNumber, message: String) {
         ConvivaSessionsManager.sharedManager.reportWarning(message: message)
     }
 
-    @objc(reportError:tags:reactTag:)
-    func reportError(message: String, tags : [String:Any], reactTag : Int) {
+    @objc(reportErrorCmd:message:tags:)
+    func reportErrorCmd(_ reactTag: NSNumber, message: String, tags : [String:Any]) {
         ConvivaSessionsManager.sharedManager.reportError(message: message, tags: tags)
     }
     
-    @objc(setSeekStart:reactTag:)
-    func setSeekStart(startPosition: Int, reactTag : Int) {
+    @objc(setSeekStartCmd:startPosition:)
+    func setSeekStartCmd(_ reactTag: NSNumber, startPosition: Int) {
         ConvivaSessionsManager.sharedManager.setSeekStart(startPosition: startPosition)
     }
     
-    @objc(setSeekEnd:reactTag:)
-    func setSeekEnd(endPosition: Int, reactTag : Int) {
+    @objc(setSeekEndCmd:endPosition:)
+    func setSeekEndCmd(_ reactTag: NSNumber, endPosition: Int) {
         ConvivaSessionsManager.sharedManager.setSeekEnd(endPosition: endPosition)
     }
     
-    @objc(reportPlaybackEnded:)
-    func reportPlaybackEnded(reactTag : Int) {
+    @objc(reportPlaybackEndedCmd:)
+    func reportPlaybackEndedCmd(_ reactTag: NSNumber) {
         ConvivaSessionsManager.sharedManager.reportPlaybackEnded()
     }
 }
