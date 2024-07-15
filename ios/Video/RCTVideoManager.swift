@@ -91,7 +91,7 @@ class RCTVideoManager: RCTViewManager {
     }
     
     //MARK: - Conviva bridging methods
-    @objc(convivaInitCmd:gatewayUrl:playerName:tags:enableDebug:)
+    @objc(convivaInitCmd:customerKey:gatewayUrl:playerName:tags:enableDebug:)
     func convivaInitCmd(_ reactTag: NSNumber, customerKey: String, gatewayUrl: String, playerName: String, tags : [String:Any], enableDebug : Bool)  {
         ConvivaSessionsManager.sharedManager.initialiseConviva(customerKey: customerKey, gatewayUrl: gatewayUrl, playerName: playerName, tags: tags, enableDebug: enableDebug)
     }
