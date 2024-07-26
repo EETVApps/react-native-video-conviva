@@ -304,7 +304,6 @@ dependencies {
         // Common functionality used across multiple media libraries
         implementation "androidx.media3:media3-common:$media3_version"
     }
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
     implementation "com.conviva.sdk:conviva-core-sdk:$conviva_core_sdk_version"
     implementation "com.conviva.sdk:conviva-exoplayer-sdk:$conviva_exoplayer_sdk_version"
