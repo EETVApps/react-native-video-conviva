@@ -86,20 +86,20 @@ RCT_EXTERN_METHOD(getCurrentPosition
                   : (RCTPromiseRejectBlock)reject)
 
 //MARK: - Conviva bridging methods
-RCT_EXTERN_METHOD(convivaInit:(nonnull NSNumber*)reactTag customerKey : (nonnull NSString*)customerKey gatewayUrl:(nonnull NSString*)gatewayUrl playerName:(nonnull NSString*)playerName tags:(nonnull NSDictionary*)tags enableDebug:(BOOL)enableDebug)
+RCT_EXTERN_METHOD(convivaInitCmd:(nonnull NSNumber*)reactTag customerKey : (nonnull NSString*)customerKey gatewayUrl:(nonnull NSString*)gatewayUrl playerName:(nonnull NSString*)playerName tags:(nonnull NSDictionary*)tags enableDebug:(BOOL)enableDebug)
 
-RCT_EXTERN_METHOD(reportPlaybackRequested:(nonnull NSNumber*)reactTag assetName : (nonnull NSString*)assetName isLive:(BOOL)isLive tags:(nonnull NSDictionary*)tags)
+RCT_EXTERN_METHOD(reportPlaybackRequestedCmd:(nonnull NSNumber*)reactTag assetName : (nonnull NSString*)assetName isLive:(BOOL)isLive tags:(nonnull NSDictionary*)tags)
 
-RCT_EXTERN_METHOD(setPlaybackData:(nonnull NSNumber*)reactTag streamUrl : (nonnull NSString*)streamUrl viewerId:(nonnull NSString*)viewerId tags:(nonnull NSDictionary*)tags)
+RCT_EXTERN_METHOD(setPlaybackDataCmd:(nonnull NSNumber*)reactTag streamUrl : (nonnull NSString*)streamUrl viewerId:(nonnull NSString*)viewerId tags:(nonnull NSDictionary*)tags)
 
-RCT_EXTERN_METHOD(reportWarning:(nonnull NSNumber*)reactTag message : (nonnull NSString*)message)
+RCT_EXTERN_METHOD(reportWarningCmd:(nonnull NSNumber*)reactTag message : (nonnull NSString*)message)
 
-RCT_EXTERN_METHOD(reportError:(nonnull NSNumber*)reactTag message : (nonnull NSString*)message tags:(nonnull NSDictionary*)tags)
+RCT_EXTERN_METHOD(reportErrorCmd:(nonnull NSNumber*)reactTag message : (nonnull NSString*)message tags:(nonnull NSDictionary*)tags)
 
-RCT_EXTERN_METHOD(setSeekStart:(nonnull NSNumber*)reactTag startPosition : (NSInteger)startPosition)
+RCT_EXTERN_METHOD(setSeekStartCmd:(nonnull NSNumber*)reactTag startPosition : (NSInteger)startPosition)
 
-RCT_EXTERN_METHOD(setSeekEnd:(nonnull NSNumber*)reactTag endPosition : (NSInteger)endPosition)
+RCT_EXTERN_METHOD(setSeekEndCmd:(nonnull NSNumber*)reactTag endPosition : (NSInteger)endPosition)
 
-RCT_EXTERN_METHOD(reportPlaybackEnded:(nonnull NSNumber*)reactTag)
+RCT_EXTERN_METHOD(reportPlaybackEndedCmd:(nonnull NSNumber*)reactTag)
 
 @end
