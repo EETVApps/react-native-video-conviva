@@ -202,6 +202,7 @@ public class ReactExoplayerView extends FrameLayout implements
     private long resumePosition;
     private boolean loadVideoStarted;
     private boolean isFullscreen;
+    private boolean originalFitsSystemWindows;
     private boolean isInBackground;
     private boolean isPaused;
     private boolean isBuffering;
@@ -1287,9 +1288,6 @@ public class ReactExoplayerView extends FrameLayout implements
     }
 
     private void onStopPlayback() {
-        if (isFullscreen) {
-            setFullscreen(false);
-        }
         audioManager.abandonAudioFocus(audioFocusChangeListener);
     }
 
@@ -1597,7 +1595,7 @@ public class ReactExoplayerView extends FrameLayout implements
         if (format.sampleMimeType != null) track.setMimeType(format.sampleMimeType);
         if (format.language != null) track.setLanguage(format.language);
         if (format.label != null) track.setTitle(format.label);
-        track.setSelected(isTrackSelected(selection, group, 0));
+        track.setSelected(isTrackSelected(selection, group, trackIndex));
         return track;
     }
 
@@ -2245,6 +2243,7 @@ public class ReactExoplayerView extends FrameLayout implements
                 fullScreenPlayerView.show();
             }
             UiThreadUtil.runOnUiThread(() -> {
+                originalFitsSystemWindows = window.getDecorView().getFitsSystemWindows();
                 WindowCompat.setDecorFitsSystemWindows(window, false);
                 controller.hide(WindowInsetsCompat.Type.systemBars());
                 controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
@@ -2258,7 +2257,7 @@ public class ReactExoplayerView extends FrameLayout implements
                 setControls(controls);
             }
             UiThreadUtil.runOnUiThread(() -> {
-                WindowCompat.setDecorFitsSystemWindows(window, true);
+                WindowCompat.setDecorFitsSystemWindows(window, originalFitsSystemWindows);
                 controller.show(WindowInsetsCompat.Type.systemBars());
                 eventEmitter.onVideoFullscreenPlayerDidDismiss.invoke();
             });
