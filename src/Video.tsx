@@ -512,7 +512,8 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
       [onControlsVisibilityChange],
     );
 
-    const usingExternalGetLicense = drm?.getLicense instanceof Function;
+    const sourceDrm = source?.drm || drm;
+    const usingExternalGetLicense = sourceDrm?.getLicense instanceof Function;
 
     const onGetLicense = useCallback(
       async (event: NativeSyntheticEvent<OnGetLicenseData>) => {
@@ -524,7 +525,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
         if (data?.spcBase64) {
           try {
             // Handles both scenarios, getLicenseOverride being a promise and not.
-            const license = await drm.getLicense(
+            const license = await sourceDrm.getLicense(
               data.spcBase64,
               data.contentId,
               data.licenseUrl,
@@ -532,6 +533,13 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
             );
             result =
               typeof license === 'string' ? license : 'Empty license result';
+              if (nativeRef.current && typeof license === 'string') {
+                NativeVideoManager.setLicenseResultCmd(
+                  getReactTag(nativeRef),
+                  result,
+                  data.loadedLicenseUrl,
+                );
+              }
           } catch {
             result = 'fetch error';
           }
@@ -546,7 +554,7 @@ const Video = forwardRef<VideoRef, ReactVideoProps>(
           );
         }
       },
-      [drm, usingExternalGetLicense],
+      [sourceDrm, usingExternalGetLicense],
     );
 
     useImperativeHandle(
